@@ -5,4 +5,5 @@
 .vscode/ipch
 __pycache__
 src/mz_build_version.c
+src/config.h
 

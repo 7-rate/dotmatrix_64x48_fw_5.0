@@ -23,6 +23,9 @@
 
 #include "bad_apple.h"
 
+#include "openweathermap.h"
+#include "mz_weather.h"
+
 class screen_clock_t;
 
 static screen_clock_t *screen_clock; // base clock instance
@@ -1373,6 +1376,112 @@ protected:
 	}
 };
 
+class screen_weather_city_name_editor_t : public screen_ascii_editor_t
+{
+public:
+	screen_weather_city_name_editor_t() : screen_ascii_editor_t(F("city name"), {get_weather_city_name()} )
+	{
+		String r;
+		settings_read(F("ui_weather_city_name"), r);
+	}
+
+protected:
+	void on_ok(const String &line) override
+	{
+		settings_write(F("ui_weather_city_name"), line);
+		screen_manager.pop();
+	}
+
+	void on_cancel() override
+	{
+		screen_manager.pop();
+	}
+};
+
+class screen_weather_setting_t : public screen_menu_t
+{
+	bool weather_visible;
+public:
+	screen_weather_setting_t() : screen_menu_t( F("Weather"), {} )
+	{
+		set_h_scroll(true);
+
+		String r;
+		settings_read(F("ui_weather_visible"), r);
+		weather_visible = r.toInt();
+		push_items(weather_visible);
+	}
+private:
+	void push_items(bool wv)
+	{
+		String w;
+		if(wv)
+		{
+			w = F("1");
+			get_items().push_back("[ON] OFF");
+			get_items().push_back("city name");
+			get_items().push_back("api key");
+		}
+		else
+		{
+			w = F("0");
+			get_items().push_back(" ON [OFF]");
+		}
+		settings_write(F("ui_weather_visible"), w);
+	}
+protected:
+	void on_ok(int idx) override
+	{
+		switch(idx)
+		{
+		case 0: // ON OFF
+			weather_visible = !weather_visible;
+			get_items().clear();
+			push_items(weather_visible);
+			break;
+		case 1: // city name
+			//screen_manager.push(new screen_light_off_threshold_editor_t());
+			break;
+		case 2: // api key
+			//screen_manager.push(new screen_light_off_threshold_editor_t());
+			break;
+		}
+	}
+
+	void on_cancel() override
+	{
+		screen_manager.pop();
+	}
+};
+
+class screen_other_setting_t : public screen_menu_t
+{
+public:
+	screen_other_setting_t() : screen_menu_t( 
+		F("Settings"), {
+			F("Weather"),
+		} )
+	{
+		set_h_scroll(true);
+	}
+
+protected:
+	void on_ok(int idx) override
+	{
+		switch(idx)
+		{
+		case 0: // Weather
+			screen_manager.push(new screen_weather_setting_t());
+			break;
+		}
+	}
+
+	void on_cancel() override
+	{
+		screen_manager.pop();
+	}
+};
+
 //! main clock ui
 class screen_clock_t : public screen_base_t
 {
@@ -1480,11 +1589,38 @@ private:
 		// draw marquee
 		if (font_ft.get_available())
 		{
-			fb().draw_text(-marquee_x, 35, 255, marquee, font_ft);
-			if (marquee_len > LED_MAX_LOGICAL_COL)
-				fb().draw_text(-marquee_x + marquee_len, 35, 255, marquee, font_ft);
-		}
+			// fb().draw_text(-marquee_x              , 35, 255, marquee, font_ft);
+			// if(marquee_len > LED_MAX_LOGICAL_COL)
+			// 	fb().draw_text(-marquee_x + marquee_len, 35, 255, marquee, font_ft);
+			fb().draw_text(0, 35, 255, mz_weather[0].weather_mark.c_str(), font_ft);
+			sprintf_P(buf, PSTR("%2d℃"), mz_weather[0].temp);
+			fb().draw_text(15, 35, 255, buf, font_4x5);
+			if (mz_weather[0].wind_10 >= 100)
+			{
+				sprintf_P(buf, PSTR("%2dm"), mz_weather[0].wind_10/10);
+				fb().draw_text(15, 42, 255, buf, font_4x5);
+			}
+			else
+			{
+				sprintf_P(buf, PSTR("%1d.%1dm"), mz_weather[0].wind_10/10, mz_weather[0].wind_10%10);
+				fb().draw_text(15, 42, 255, buf, font_4x5);
+			}
 
+
+			fb().draw_text(32, 35, 255, mz_weather[2].weather_mark.c_str(), font_ft);
+			sprintf_P(buf, PSTR("%2d℃"), mz_weather[2].temp);
+			fb().draw_text(47, 35, 255, buf, font_4x5);
+			if (mz_weather[2].wind_10 >= 100)
+			{
+				sprintf_P(buf, PSTR("%2d"), mz_weather[2].wind_10/10);
+				fb().draw_text(47, 42, 255, buf, font_4x5);
+			}
+			else
+			{
+				sprintf_P(buf, PSTR("%1d.%1dm"), mz_weather[2].wind_10/10, mz_weather[2].wind_10%10);
+				fb().draw_text(47, 42, 255, buf, font_4x5);
+			}
+		}
 	}
 
 protected:
@@ -1553,6 +1689,14 @@ protected:
 		case BUTTON_DOWN:
 			// down button; decrease contrast
 			sensors_change_current_brightness(-1);
+			return;
+
+		case BUTTON_RIGHT:
+			update_weather();
+			return;
+
+		case BUTTON_LEFT:
+			screen_manager.push(new screen_other_setting_t());
 			return;
 		}
 	}

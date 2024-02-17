@@ -2,6 +2,23 @@
 #include <vector>
 #include "pendulum.h"
 #include "interval.h"
+#include <time.h>
+#include "mz_weather.h"
+
+
+int tm_min_old;
+void check_weather()
+{
+    struct tm tm;
+    time_t timeval;
+    (void)time(&timeval);
+    (void)localtime_r(&timeval, &tm);
+    if ((tm.tm_min / 10) != (tm_min_old / 10))
+    {
+        update_weather();
+    }
+    tm_min_old = tm.tm_min;
+}
 
 
 /**
@@ -78,6 +95,7 @@ void poll_pendulum()
 	EVERY_MS(1)
 	{
 		pendulum_scheduler.check();
+		check_weather();
 	}
 	END_EVERY_MS
 }

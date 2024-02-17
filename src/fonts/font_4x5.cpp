@@ -285,7 +285,15 @@ const PROGMEM glyph_vw_t font_4x5_data[]= {
 	" @@@    "_b,
 	}
 },
-
+{ // m - 29
+5, {
+	"        "_b,
+	" @ @    "_b,
+	"@ @ @   "_b,
+	"@ @ @   "_b,
+	"@ @ @   "_b,
+	}
+},
 
 
 };
@@ -315,6 +323,7 @@ static int chr_to_index(int32_t chr)
 	case 'e': return 26;
 	case 't': return 27;
 	case 'd': return 28;
+	case 'm': return 29;
 	default:;
 	}
 	return -1;

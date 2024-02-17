@@ -2,6 +2,7 @@
 #define MZ_WIFI_H__
 #include <WiFi.h>
 #include <limits.h>
+#include <vector>
 
 void wifi_set_clear_setting_flag();
 

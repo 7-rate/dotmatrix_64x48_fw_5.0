@@ -1,6 +1,7 @@
 #define Binary_h // a kind of nasty thing: disable warning about redefinition of BXXXX
 #include <Arduino.h>
 #include <mz_console.h>
+#include <vector>
 #include "esp_console.h"
 #include "esp_system.h"
 #include "esp_log.h"

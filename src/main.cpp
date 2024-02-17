@@ -17,6 +17,7 @@
 #include "mz_version.h"
 #include "pendulum.h"
 #include "fonts/font_ft.h"
+#include "openweathermap.h"
 #include "panic.h"
 
 #define MY_CONFIG_ARDUINO_LOOP_STACK_SIZE 16384U
@@ -108,6 +109,7 @@ void setup() {
   init_bme280();
   init_ambient();
   init_font_ft();
+  init_OpenWeatherMap();
   web_server_setup();
   ui_setup();
   begin_console();
